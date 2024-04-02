@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import os
+
 app = Flask(__name__)
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -10,26 +11,31 @@ def signup():
         email = request.form['email']
         password = request.form['password']
 
-        # You can perform additional validation or processing here
-
-        # Store the data in a file or a database
-        # Example: Store in a text file
+        # Store the data in a text file
         with open('users.txt', 'a') as file:
             file.write(f"Username: {username}, Email: {email}, Password: {password}\n")
+
+        # Create a new HTML file for the user
+        user_html = render_template('user.html', username=username)
+        user_file_path = os.path.join('users', f"{username}.html")
+        os.makedirs(os.path.dirname(user_file_path), exist_ok=True)
+        with open(user_file_path, 'w') as file:
+            file.write(user_html)
 
         return 'Sign up successful!'
     else:
         return render_template('index.html')
 
-@app.route('/entries/<entry_filename>')
-def entry(entry_filename):
-    entry_path = os.path.join('entries', entry_filename)
-    if os.path.exists(entry_path):
-        with open(entry_path, 'r') as entry_file:
-            entry_html = entry_file.read()
-        return entry_html
+
+@app.route('/users/<username>')
+def user(username):
+    user_file_path = os.path.join('users', f"{username}.html")
+    if os.path.exists(user_file_path):
+        with open(user_file_path, 'r') as user_file:
+            user_html = user_file.read()
+        return user_html
     else:
-        return 'Entry not found'
+        return 'User not found'
 
 if __name__ == '__main__':
     app.run(debug=True)
