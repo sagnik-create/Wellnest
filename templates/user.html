@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <link rel="stylesheet" href="pgstyles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pgstyles.css') }}">
 </head>
 <body>
     <div class="container">
@@ -25,8 +25,8 @@
                     <span class="label">New Users</span>
                 </div>
                 <div class="stat">
-                    <span class="value">15,152</span>
-                    <span class="label">Visits</span>
+                    <span class="value">15</span>
+                    <span class="label">doctor visits this month</span>
                 </div>
             </div>
             <div class="cards">
@@ -42,7 +42,7 @@
                 </div>
             </div>
             <div class="chart">
-                <h3>Profit Chart</h3>
+                <h3> Health Chart</h3>
                 <!-- Add chart code here -->
             </div>
         </div>

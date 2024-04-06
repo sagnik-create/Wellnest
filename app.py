@@ -3,6 +3,7 @@ import os
 
 app = Flask(__name__)
 
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
