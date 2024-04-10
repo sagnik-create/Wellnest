@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 import PyPDF2
 import re
-
+import io
 app = Flask(__name__)
 
 # Prescription analyzer functions
@@ -21,20 +21,30 @@ def compare_prescriptions(prev_prescription, latest_prescription):
 
     return continued_medications, new_medications, restricted_medications
 
-def extract_text_from_pdf(pdf_path):
+def extract_text_from_pdf(file_storage):
     text = ""
     try:
-        with open(pdf_path, "rb") as f:
-            pdf_reader = PyPDF2.PdfReader(f)
-            num_pages = len(pdf_reader.pages)
-            for page_num in range(num_pages):
-                page = pdf_reader.pages[page_num]
-                text += page.extract_text()
-    except PyPDF2._utils.PdfStreamError as e:
+        # Create a BytesIO object from the file content
+        pdf_bytes = file_storage.read()
+        pdf_stream = io.BytesIO(pdf_bytes)
+
+        # Pass the BytesIO object to PyPDF2.PdfReader
+        pdf_reader = PyPDF2.PdfReader(pdf_stream)
+        num_pages = len(pdf_reader.pages)
+
+        for page_num in range(num_pages):
+            page = pdf_reader.pages[page_num]
+            text += page.extract_text()
+
+    except PyPDF2.utils.PdfReadError as e:
         print(f"Error reading PDF file: {e}")
+
     return text
 
 # Flask routes
+@app.route('/')
+def main_page():
+    return render_template('first.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -72,19 +82,26 @@ def user(username):
 @app.route('/analyze_prescription/<username>', methods=['GET', 'POST'])
 def analyze_prescription(username):
     if request.method == 'POST':
-        prev_prescription_file = request.files['prev_prescription']
-        latest_prescription_file = request.files['latest_prescription']
+        print(request.files)  # Debug: Print the contents of request.files
+        prev_prescription_file = request.files.get('prev_prescription')
+        latest_prescription_file = request.files.get('latest_prescription')
 
-        prev_prescription_text = extract_text_from_pdf(prev_prescription_file)
-        latest_prescription_text = extract_text_from_pdf(latest_prescription_file)
+        if prev_prescription_file and latest_prescription_file:
+            prev_prescription_text = extract_text_from_pdf(prev_prescription_file)
+            latest_prescription_text = extract_text_from_pdf(latest_prescription_file)
+            continued_medications, new_medications, restricted_medications = compare_prescriptions(prev_prescription_text, latest_prescription_text)
 
-        continued_medications, new_medications, restricted_medications = compare_prescriptions(prev_prescription_text, latest_prescription_text)
-
-        return render_template('prescription_analysis.html', 
+            return render_template('prescription_analysis.html', 
                             username=username, 
                             continued_medications=continued_medications, 
                             new_medications=new_medications, 
                             restricted_medications=restricted_medications)
+        else:
+            return "No files received"
+    else:
+        return render_template('prescription_analysis.html', username=username)
+        
+    
  
 
 if __name__ == '__main__':
