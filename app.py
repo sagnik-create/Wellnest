@@ -3,8 +3,10 @@ import os
 import PyPDF2
 import re
 import io
-app = Flask(__name__)
+secret_key = "sagnikd2345678900000000" # Generates a 32-character hex string
 
+app = Flask(__name__)
+app.secret_key = 'sagnikd2345678900000000'
 # Prescription analyzer functions
 
 def extract_medications(prescription_text):
@@ -65,9 +67,24 @@ def signup():
         with open(user_file_path, 'w') as file:
             file.write(user_html)
 
-        return 'Sign up successful!'
+        return redirect(url_for('user', username=username))
     else:
         return render_template('index.html')
+
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Check if the username and password match a record in the users.txt file
+        with open('users.txt', 'r') as file:
+            for line in file:
+                if line.strip().startswith(f"Username: {username}, Password: {password}"):
+                    return redirect(url_for('user', username=username))
+        flash('Valid Username and Password')
+
+    return render_template('signin.html')
 
 @app.route('/users/<username>')
 def user(username):
@@ -100,6 +117,7 @@ def analyze_prescription(username):
             return "No files received"
     else:
         return render_template('prescription_analysis.html', username=username)
+
         
     
  
