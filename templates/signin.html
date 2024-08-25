@@ -21,7 +21,13 @@
                 </div>
                 <button type="submit">Sign In</button>
             </form>
-            <div class="flash">{{ get_flashed_messages() }}</div>
+            
+            <!-- Flash message display -->
+            <div class="flash">
+                {% for message in get_flashed_messages() %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
 
         </div>
     </div>

@@ -70,7 +70,6 @@ def signup():
         return redirect(url_for('user', username=username))
     else:
         return render_template('index.html')
-
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
     if request.method == 'POST':
@@ -80,11 +79,26 @@ def signin():
         # Check if the username and password match a record in the users.txt file
         with open('users.txt', 'r') as file:
             for line in file:
-                if line.strip().startswith(f"Username: {username}, Password: {password}"):
-                    return redirect(url_for('user', username=username))
-        flash('Valid Username and Password')
+                # Split the line to extract the username and password
+                parts = line.strip().split(", ")
+                if len(parts) == 3:  # Ensure there are 3 parts: Username, Email, and Password
+                    user_part = parts[0].split(": ")[1]
+                    pass_part = parts[2].split(": ")[1]
+                    
+                    # Check if the username and password match
+                    if user_part == username and pass_part == password:
+                        user_file_path = os.path.join('users', f"{username}.html")
+                        if os.path.exists(user_file_path):
+                            return redirect(url_for('user', username=username))
+                        else:
+                            flash('User page not found')
+                            return redirect(url_for('signin'))
+        
+        flash('Invalid Username or Password')
+        return redirect(url_for('signin'))
 
     return render_template('signin.html')
+
 
 @app.route('/users/<username>')
 def user(username):
