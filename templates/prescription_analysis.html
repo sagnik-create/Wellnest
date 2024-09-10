@@ -1,18 +1,51 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prescription Analysis</title>
-  </head>
-  <body>
-    <h1>Prescription Analysis</h1>
+</head>
+<body>
+    <h1>Prescription Analysis for {{ username }}</h1>
     <form action="{{ url_for('analyze_prescription', username=username) }}" method="post" enctype="multipart/form-data">
-      <label for="prev_prescription">Previous Prescription:</label>
-      <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
-      <br>
-      <label for="latest_prescription">Latest Prescription:</label>
-      <input type="file" id="latest_prescription" name="latest_prescription" accept=".pdf" required>
-      <br>
-      <input type="submit" value="Analyze">
+        <label for="prev_prescription">Previous Prescription:</label>
+        <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
+        <br>
+        <label for="latest_prescription">Latest Prescription:</label>
+        <input type="file" id="latest_prescription" name="latest_prescription" accept=".pdf" required>
+        <br>
+        <input type="submit" value="Analyze">
     </form>
-  </body>
+
+    {% if continued_medications or new_medications or restricted_medications %}
+        <h2>Analysis Results:</h2>
+
+        {% if continued_medications %}
+        <h3>Continued Medications:</h3>
+        <ul>
+            {% for medication in continued_medications %}
+            <li>{{ medication }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if new_medications %}
+        <h3>New Medications:</h3>
+        <ul>
+            {% for medication in new_medications %}
+            <li>{{ medication }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if restricted_medications %}
+        <h3>Restricted Medications:</h3>
+        <ul>
+            {% for medication in restricted_medications %}
+            <li>{{ medication }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endif %}
+</body>
 </html>
