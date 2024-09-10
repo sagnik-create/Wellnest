@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Prescription Analysis</title>
+  </head>
+  <body>
+    <h1>Prescription Analysis</h1>
+    <form action="/analyze_prescription/12023002026039" method="post" enctype="multipart/form-data">
+      <label for="prev_prescription">Previous Prescription:</label>
+      <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
+      <br>
+      <label for="latest_prescription">Latest Prescription:</label>
+      <input type="file" id="latest_prescription" name="latest_prescription" accept=".pdf" required>
+      <br>
+      <input type="submit" value="Analyze">
+    </form>
+  </body>
+</html>

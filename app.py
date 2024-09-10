@@ -67,9 +67,16 @@ def signup():
         with open(user_file_path, 'w') as file:
             file.write(user_html)
 
+        # Automatically create the prescription_analysis.html for the user
+        prescription_analysis_html = render_template('prescription_analysis.html', username=username)
+        prescription_analysis_file_path = os.path.join('users', f"{username}_prescription_analysis.html")
+        with open(prescription_analysis_file_path, 'w') as file:
+            file.write(prescription_analysis_html)
+
         return redirect(url_for('user', username=username))
     else:
         return render_template('index.html')
+
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
     if request.method == 'POST':
@@ -122,19 +129,35 @@ def analyze_prescription(username):
             latest_prescription_text = extract_text_from_pdf(latest_prescription_file)
             continued_medications, new_medications, restricted_medications = compare_prescriptions(prev_prescription_text, latest_prescription_text)
 
-            return render_template('prescription_analysis.html', 
-                            username=username, 
-                            continued_medications=continued_medications, 
-                            new_medications=new_medications, 
-                            restricted_medications=restricted_medications)
+            # Save the prescription analysis results to the user's HTML file
+            prescription_analysis_html = render_template(
+                'prescription_analysis.html', 
+                username=username, 
+                continued_medications=continued_medications, 
+                new_medications=new_medications, 
+                restricted_medications=restricted_medications
+            )
+
+            # Save the rendered prescription analysis HTML to the user's file
+            prescription_analysis_file_path = os.path.join('users', f"{username}_prescription_analysis.html")
+            with open(prescription_analysis_file_path, 'w') as file:
+                file.write(prescription_analysis_html)
+
+            return prescription_analysis_html
+
         else:
             return "No files received"
-    else:
-        return render_template('prescription_analysis.html', username=username)
 
-        
-    
- 
+    else:
+        # Render the pre-generated prescription_analysis.html for GET requests
+        prescription_analysis_file_path = os.path.join('users', f"{username}_prescription_analysis.html")
+        if os.path.exists(prescription_analysis_file_path):
+            with open(prescription_analysis_file_path, 'r') as file:
+                prescription_analysis_html = file.read()
+            return prescription_analysis_html
+        else:
+            return "Prescription analysis page not found"
+
 
 if __name__ == '__main__':
     app.run(debug=True)
