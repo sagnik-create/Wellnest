@@ -3,10 +3,10 @@ import os
 import PyPDF2
 import re
 import io
-secret_key = "sagnikd2345678900000000" # Generates a 32-character hex string
 
 app = Flask(__name__)
 app.secret_key = 'sagnikd2345678900000000'
+
 # Prescription analyzer functions
 
 def extract_medications(prescription_text):
@@ -106,7 +106,6 @@ def signin():
 
     return render_template('signin.html')
 
-
 @app.route('/users/<username>')
 def user(username):
     user_file_path = os.path.join('users', f"{username}.html")
@@ -120,44 +119,27 @@ def user(username):
 @app.route('/analyze_prescription/<username>', methods=['GET', 'POST'])
 def analyze_prescription(username):
     if request.method == 'POST':
-        print(request.files)  # Debug: Print the contents of request.files
         prev_prescription_file = request.files.get('prev_prescription')
         latest_prescription_file = request.files.get('latest_prescription')
 
         if prev_prescription_file and latest_prescription_file:
+            # Extract text from the PDFs
             prev_prescription_text = extract_text_from_pdf(prev_prescription_file)
             latest_prescription_text = extract_text_from_pdf(latest_prescription_file)
+
+            # Compare the prescriptions
             continued_medications, new_medications, restricted_medications = compare_prescriptions(prev_prescription_text, latest_prescription_text)
 
-            # Save the prescription analysis results to the user's HTML file
-            prescription_analysis_html = render_template(
-                'prescription_analysis.html', 
-                username=username, 
-                continued_medications=continued_medications, 
-                new_medications=new_medications, 
-                restricted_medications=restricted_medications
-            )
-
-            # Save the rendered prescription analysis HTML to the user's file
-            prescription_analysis_file_path = os.path.join('users', f"{username}_prescription_analysis.html")
-            with open(prescription_analysis_file_path, 'w') as file:
-                file.write(prescription_analysis_html)
-
-            return prescription_analysis_html
-
+            # Render the template with the results
+            return render_template('prescription_analysis.html',
+                                   username=username,
+                                   continued_medications=continued_medications,
+                                   new_medications=new_medications,
+                                   restricted_medications=restricted_medications)
         else:
             return "No files received"
-
     else:
-        # Render the pre-generated prescription_analysis.html for GET requests
-        prescription_analysis_file_path = os.path.join('users', f"{username}_prescription_analysis.html")
-        if os.path.exists(prescription_analysis_file_path):
-            with open(prescription_analysis_file_path, 'r') as file:
-                prescription_analysis_html = file.read()
-            return prescription_analysis_html
-        else:
-            return "Prescription analysis page not found"
-
+        return render_template('prescription_analysis.html', username=username)
 
 if __name__ == '__main__':
     app.run(debug=True)
