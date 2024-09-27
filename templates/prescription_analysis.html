@@ -4,48 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prescription Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f9f9f9;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Prescription Analysis for {{ username }}</h1>
-    <form action="{{ url_for('analyze_prescription', username=username) }}" method="post" enctype="multipart/form-data">
-        <label for="prev_prescription">Previous Prescription:</label>
-        <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
-        <br>
-        <label for="latest_prescription">Latest Prescription:</label>
-        <input type="file" id="latest_prescription" name="latest_prescription" accept=".pdf" required>
-        <br>
-        <input type="submit" value="Analyze">
-    </form>
+    <div class="container">
+        <h1>Prescription Analysis for {{ username }}</h1>
+        <form action="{{ url_for('analyze_prescription', username=username) }}" method="post" enctype="multipart/form-data">
+            <label for="prev_prescription">Previous Prescription:</label>
+            <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
+            <br>
+            <label for="latest_prescription">Latest Prescription:</label>
+            <input type="file" id="latest_prescription" name="latest_prescription" accept=".pdf" required>
+            <br>
+            <input type="submit" value="Analyze">
+        </form>
 
-    {% if continued_medications or new_medications or restricted_medications %}
-        <h2>Analysis Results:</h2>
+        {% if continued_medications is defined or new_medications is defined or restricted_medications is defined %}
+            <h2>Analysis Results:</h2>
 
-        {% if continued_medications %}
-        <h3>Continued Medications:</h3>
-        <ul>
-            {% for medication in continued_medications %}
-            <li>{{ medication }}</li>
-            {% endfor %}
-        </ul>
+            {% if continued_medications %}
+            <h3>Continued Medications:</h3>
+            <ul>
+                {% for medication in continued_medications %}
+                <li>{{ medication }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if new_medications %}
+            <h3>New Medications:</h3>
+            <ul>
+                {% for medication in new_medications %}
+                <li>{{ medication }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if restricted_medications %}
+            <h3>Restricted Medications:</h3>
+            <ul>
+                {% for medication in restricted_medications %}
+                <li>{{ medication }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
         {% endif %}
-
-        {% if new_medications %}
-        <h3>New Medications:</h3>
-        <ul>
-            {% for medication in new_medications %}
-            <li>{{ medication }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-
-        {% if restricted_medications %}
-        <h3>Restricted Medications:</h3>
-        <ul>
-            {% for medication in restricted_medications %}
-            <li>{{ medication }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    {% endif %}
+    </div>
 </body>
 </html>
