@@ -62,7 +62,7 @@
             white-space: pre-wrap;
             font-family: monospace;
         }
-        .common-medications {
+        .common-medications, .dosage-form {
             background-color: #e6f7ff;
             padding: 15px;
             border-radius: 5px;
@@ -104,6 +104,13 @@
             {% else %}
                 <p>No common medications found between the two prescriptions.</p>
             {% endif %}
+            
+            <h3>Medication Dosage Forms:</h3>
+            <ul>
+                {% for med in latest_medications %}
+                    <li>{{ med[0] }} - Dosage Form: {{ med[2]['Dosage Form'].values[0] }} - Strength: {{ med[1] }}</li>
+                {% endfor %}
+            </ul>
         {% endif %}
     </div>
 </body>
