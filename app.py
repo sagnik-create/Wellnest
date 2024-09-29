@@ -3,10 +3,15 @@ import os
 import PyPDF2
 import re
 import io
+import pandas as pd
+
+# Load the medicine dataset
+medicine_data = pd.read_csv('/workspaces/Medbud/mnt/data/medicine_dataset.csv')
 
 app = Flask(__name__)
 app.secret_key = 'sagnikd2345678900000000'
 
+# Function to extract text from the uploaded PDF
 def extract_text_from_pdf(file_storage):
     text = ""
     try:
@@ -21,16 +26,43 @@ def extract_text_from_pdf(file_storage):
         print(f"Error reading PDF file: {e}")
     return text
 
+# Function to extract medications from prescription text
 def extract_medications(prescription_text):
-    # Expanded list of common medications
-    medication_pattern = r'\b(?:aspirin|ibuprofen|paracetamol|acetaminophen|tylenol|advil|aleve|lisinopril|metformin|amlodipine|metoprolol|omeprazole|losartan|gabapentin|sertraline|levothyroxine|atorvastatin|simvastatin|citalopram|fluoxetine|escitalopram|bupropion|venlafaxine|duloxetine|trazodone|alprazolam|lorazepam|clonazepam|zolpidem|eszopiclone|pantoprazole|ranitidine|famotidine|cetirizine|loratadine|fexofenadine|montelukast|fluticasone|budesonide|albuterol|levalbuterol|tiotropium|prednisone|methylprednisolone|hydrocortisone|insulin|metformin|glipizide|glyburide|sitagliptin|pioglitazone|liraglutide|empagliflozin|warfarin|apixaban|rivaroxaban|clopidogrel|rosuvastatin|ezetimibe|fenofibrate|niacin|alendronate|risedronate|calcium|vitamin d|folic acid|cyanocobalamin|ferrous sulfate)\b'
-    return set(re.findall(medication_pattern, prescription_text, flags=re.IGNORECASE))
+    # Pattern to extract medicine names and dosages from the text
+    medication_pattern = r'Medicine name\s*–\s*(\w+)\s*Strength\s*-\s*(\d+\s*mg)'
+    return re.findall(medication_pattern, prescription_text)
 
+# Function to compare medications between prescriptions and with the dataset
 def compare_prescriptions(prev_prescription, latest_prescription):
     prev_medications = extract_medications(prev_prescription)
     latest_medications = extract_medications(latest_prescription)
-    common_medications = prev_medications.intersection(latest_medications)
-    return common_medications
+    
+    prev_med_dict = {med: int(strength.replace(" mg", "")) for med, strength in prev_medications}
+    latest_med_dict = {med: int(strength.replace(" mg", "")) for med, strength in latest_medications}
+
+    # Find common medications between the two prescriptions
+    common_medications = set(prev_med_dict.keys()).intersection(latest_med_dict.keys())
+
+    result = {}
+    
+    for med in common_medications:
+        prev_strength = prev_med_dict[med]
+        latest_strength = latest_med_dict[med]
+
+        # Check for strength in the dataset
+        dataset_strength = medicine_data[medicine_data['Name'].str.contains(med, case=False, na=False)]
+        if not dataset_strength.empty:
+            dataset_strength_value = int(dataset_strength['Strength'].values[0].replace(" mg", ""))
+
+            result[med] = {
+                'previous_strength': prev_strength,
+                'latest_strength': latest_strength,
+                'dataset_strength': dataset_strength_value,
+                'higher_strength': latest_strength > dataset_strength_value,
+                'dosage_form': dataset_strength['Dosage Form'].values[0]
+            }
+    
+    return result
 
 @app.route('/')
 def main_page():
@@ -99,13 +131,13 @@ def analyze_prescription(username):
             prev_prescription_text = extract_text_from_pdf(prev_prescription_file)
             latest_prescription_text = extract_text_from_pdf(latest_prescription_file)
 
-            common_medications = compare_prescriptions(prev_prescription_text, latest_prescription_text)
+            comparison_result = compare_prescriptions(prev_prescription_text, latest_prescription_text)
 
             return render_template('prescription_analysis.html',
                                    username=username,
                                    prev_prescription_text=prev_prescription_text,
                                    latest_prescription_text=latest_prescription_text,
-                                   common_medications=common_medications)
+                                   comparison_result=comparison_result)
         else:
             return "No files received"
     else:

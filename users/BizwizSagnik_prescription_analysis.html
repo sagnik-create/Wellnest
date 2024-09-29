@@ -75,9 +75,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Prescription Analysis for {{ username }}</h1>
+        <h1>Prescription Analysis for BizwizSagnik</h1>
 
-        <form action="{{ url_for('analyze_prescription', username=username) }}" method="post" enctype="multipart/form-data">
+        <form action="/analyze_prescription/BizwizSagnik" method="post" enctype="multipart/form-data">
             <label for="prev_prescription">Previous Prescription:</label>
             <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
             <br>
@@ -87,37 +87,7 @@
             <input type="submit" value="Analyze">
         </form>
 
-        {% if prev_prescription_text is defined and latest_prescription_text is defined %}
-            <h2>Extracted Prescription Text:</h2>
-
-            <h3>Previous Prescription:</h3>
-            <div class="prescription-text">{{ prev_prescription_text }}</div>
-
-            <h3>Latest Prescription:</h3>
-            <div class="prescription-text">{{ latest_prescription_text }}</div>
-
-            {% if comparison_result %}
-                <div class="comparison-results">
-                    <h3>Comparison Results:</h3>
-                    <ul>
-                        {% for med, data in comparison_result.items() %}
-                        <li>
-                            <strong>{{ med }}</strong>:<br>
-                            Previous Strength: {{ data['previous_strength'] }} mg<br>
-                            Latest Strength: {{ data['latest_strength'] }} mg<br>
-                            Dataset Strength: {{ data['dataset_strength'] }} mg<br>
-                            Dosage Form: {{ data['dosage_form'] }}<br>
-                            {% if data['higher_strength'] %}
-                            <span class="highlight">The latest prescription has a higher strength than the recommended dosage.</span>
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% else %}
-                <p>No common medications found between the two prescriptions.</p>
-            {% endif %}
-        {% endif %}
+        
     </div>
 </body>
 </html>
