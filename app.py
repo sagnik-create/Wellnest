@@ -64,6 +64,45 @@ def compare_prescriptions(prev_prescription, latest_prescription):
     
     return result
 
+# Function to present a series of multiple choice questions for the symptom analyzer
+def get_symptom_questions():
+    return [
+        {"question": "Do you have a fever?", "options": ["Yes", "No"], "id": "fever"},
+        {"question": "Are you experiencing a headache?", "options": ["Yes", "No"], "id": "headache"},
+        {"question": "Do you have a sore throat?", "options": ["Yes", "No"], "id": "sore_throat"},
+        {"question": "Do you have a cough?", "options": ["Yes", "No"], "id": "cough"},
+        {"question": "Are you feeling nauseous?", "options": ["Yes", "No"], "id": "nausea"},
+    ]
+
+# Function to get user indications based on the multiple choice answers
+def get_user_indications(answers):
+    indications = []
+    if answers.get('fever') == 'Yes':
+        indications.append('Fever')
+    if answers.get('headache') == 'Yes':
+        indications.append('Headache')
+    if answers.get('sore_throat') == 'Yes':
+        indications.append('Sore Throat')
+    if answers.get('cough') == 'Yes':
+        indications.append('Cough')
+    if answers.get('nausea') == 'Yes':
+        indications.append('Nausea')
+    return indications
+
+# Function to suggest medicines based on indications
+def suggest_medicines_for_indications(indications):
+    suggested_medicines = {}
+    
+    for indication in indications:
+        # Compare indications with the dataset to find suitable medicines
+        matching_medicines = medicine_data[medicine_data['Indication'].str.contains(indication, case=False, na=False)]
+        
+        if not matching_medicines.empty:
+            medicines = matching_medicines['Name'].tolist()
+            suggested_medicines[indication] = medicines
+    
+    return suggested_medicines
+
 @app.route('/')
 def main_page():
     return render_template('first.html')
@@ -142,6 +181,24 @@ def analyze_prescription(username):
             return "No files received"
     else:
         return render_template('prescription_analysis.html', username=username)
+
+@app.route('/analyze_symptoms/<username>', methods=['GET', 'POST'])
+def analyze_symptoms(username):
+    if request.method == 'POST':
+        # Get user answers from the form submission
+        answers = {key: request.form[key] for key in request.form.keys()}
+        indications = get_user_indications(answers)
+        
+        # Get suggested medicines for the indications
+        suggested_medicines = suggest_medicines_for_indications(indications)
+
+        return render_template('symptom_analysis_result.html', 
+                               username=username, 
+                               indications=indications, 
+                               suggested_medicines=suggested_medicines)
+    else:
+        questions = get_symptom_questions()
+        return render_template('symptom_analyzer.html', username=username, questions=questions)
 
 if __name__ == '__main__':
     app.run(debug=True)

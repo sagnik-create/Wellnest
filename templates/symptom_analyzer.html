@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='pgstyles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Symptom Analyzer</h1>
+        <form action="{{ url_for('analyze_symptoms', username=username) }}" method="POST">
+            {% for question in questions %}
+                <div class="question-block">
+                    <p>{{ question.question }}</p>
+                    <div class="options">
+                        {% for option in question.options %}
+                            <label>
+                                <input type="radio" name="{{ question.id }}" value="{{ option }}" required> {{ option }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

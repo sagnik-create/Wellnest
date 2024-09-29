@@ -10,8 +10,8 @@
     <div class="container">
         <nav>
             <ul>
-                <li><a href="{{ url_for('analyze_prescription', username=username) }}">Medicine reminder</a></li>
-                <li><a href="#">Symptoms analyzer</a></li>
+                <li><a href="{{ url_for('analyze_prescription', username=username) }}">Medicine Reminder</a></li>
+                <li><a href="{{ url_for('analyze_symptoms', username=username) }}">Symptoms Analyzer</a></li>
             </ul>
         </nav>
         <div class="dashboard">
@@ -33,17 +33,16 @@
                 <div class="card">
                     <h3>Prescription Analyzer</h3>
                     <p>Compare Prescriptions for better Medical insights</p>
-                    <!-- Updated the "Learn More" button to access prescription analysis page -->
                     <a href="{{ url_for('analyze_prescription', username=username) }}">Get Started</a>
                 </div>
                 <div class="card">
-                    <h3>Symptoms analyzer</h3>
+                    <h3>Symptoms Analyzer</h3>
                     <p>Analyze your symptoms and get recommendations.</p>
-                    <a href="#">Learn More</a>
+                    <a href="{{ url_for('analyze_symptoms', username=username) }}">Get started today</a>
                 </div>
             </div>
             <div class="chart">
-                <h3> Health Chart</h3>
+                <h3>Health Chart</h3>
                 <!-- Add chart code here -->
             </div>
         </div>
