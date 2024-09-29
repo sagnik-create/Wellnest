@@ -62,7 +62,7 @@
             white-space: pre-wrap;
             font-family: monospace;
         }
-        .common-medications {
+        .common-medications, .dosage-form {
             background-color: #e6f7ff;
             padding: 15px;
             border-radius: 5px;
@@ -72,8 +72,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Prescription Analysis for RandInt</h1>
-        <form action="/analyze_prescription/RandInt" method="post" enctype="multipart/form-data">
+        <h1>Prescription Analysis for xyz</h1>
+        <form action="/analyze_prescription?username=xyz" method="post" enctype="multipart/form-data">
             <label for="prev_prescription">Previous Prescription:</label>
             <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
             <br>

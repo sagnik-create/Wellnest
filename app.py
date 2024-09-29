@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash , session
 import os
 import PyPDF2
 import re
@@ -6,6 +6,8 @@ import io
 
 app = Flask(__name__)
 app.secret_key = 'sagnikd2345678900000000'
+
+reminders_per_user = {}
 
 def extract_text_from_pdf(file_storage):
     text = ""
@@ -39,45 +41,85 @@ def main_page():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
+        username = request.form['username'].strip()
+        email = request.form['email'].strip()
+        password = request.form['password'].strip()
+
+        if not username or not email or not password:
+            flash('All fields are required.')
+            return redirect(url_for('signup'))
+
+        # Check for existing username
+        if os.path.exists('users.txt'):
+            with open('users.txt', 'r') as file:
+                for line in file:
+                    parts = line.strip().split(", ")
+                    if len(parts) >= 1:
+                        user_part = parts[0].split(": ")[1]
+                        if user_part.lower() == username.lower():
+                            flash('Username already exists.')
+                            return redirect(url_for('signup'))
+
+        # Save user credentials
         with open('users.txt', 'a') as file:
             file.write(f"Username: {username}, Email: {email}, Password: {password}\n")
+
+        # Initialize reminders for the user
+        reminders_per_user[username] = []
+
+        # Create user-specific HTML files
         user_html = render_template('user.html', username=username)
         user_file_path = os.path.join('users', f"{username}.html")
         os.makedirs(os.path.dirname(user_file_path), exist_ok=True)
         with open(user_file_path, 'w') as file:
             file.write(user_html)
+
         prescription_analysis_html = render_template('prescription_analysis.html', username=username)
         prescription_analysis_file_path = os.path.join('users', f"{username}_prescription_analysis.html")
         with open(prescription_analysis_file_path, 'w') as file:
             file.write(prescription_analysis_html)
-        return redirect(url_for('user', username=username))
+
+        flash('Signup successful! Please sign in.')
+        return redirect(url_for('signin'))
     else:
         return render_template('index.html')
+    
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form['username'].strip()
+        password = request.form['password'].strip()
+        
+        # Ensure both fields are filled out
+        if not username or not password:
+            flash('Both fields are required.')
+            return redirect(url_for('signin'))
+        
+        user_found = False  # Flag to check if user is found
         with open('users.txt', 'r') as file:
             for line in file:
                 parts = line.strip().split(", ")
                 if len(parts) == 3:
-                    user_part = parts[0].split(": ")[1]
-                    pass_part = parts[2].split(": ")[1]
-                    if user_part == username and pass_part == password:
+                    user_part = parts[0].split(": ")[1].strip()  # Stripping whitespace
+                    pass_part = parts[2].split(": ")[1].strip()  # Stripping whitespace
+                    if user_part.lower() == username.lower() and pass_part == password:  # Case-insensitive username check
+                        session['username'] = username  # Set session variable
                         user_file_path = os.path.join('users', f"{username}.html")
                         if os.path.exists(user_file_path):
                             return redirect(url_for('user', username=username))
                         else:
-                            flash('User page not found')
+                            flash('User page not found.')
                             return redirect(url_for('signin'))
-        flash('Invalid Username or Password')
-        return redirect(url_for('signin'))
+                        user_found = True
+        
+        if not user_found:
+            flash('Invalid Username or Password')
+            return redirect(url_for('signin'))
+    
     return render_template('signin.html')
+
+
 
 @app.route('/users/<username>')
 def user(username):
@@ -110,6 +152,71 @@ def analyze_prescription(username):
             return "No files received"
     else:
         return render_template('prescription_analysis.html', username=username)
+
+@app.route('/reminder')
+def reminders(username):
+    if 'username' not in session:
+        flash('You need to sign in first.')
+        return redirect(url_for('signin'))
+    username = session['username']
+    user_reminders = reminders_per_user.get(username, [])
+    return render_template('reminder.html', reminders=user_reminders)
+
+
+@app.route('/reminder/<username>', methods=['GET', 'POST'])
+def reminder(username):
+    if request.method == 'POST':
+        new_reminder = request.form.get('reminders')
+        if username in reminders_per_user:
+            reminders_per_user[username].append(new_reminder)
+        else:
+            reminders_per_user[username] = [new_reminder]
+        return redirect(url_for('reminders', username=username))
+    
+    user_reminders = reminders_per_user.get(username, [])
+    return render_template('reminder.html', username=username, reminders=user_reminders)
+
+
+@app.route('/reminder/<username>/delete/<int:index>')
+def delete_reminder(username, index):
+    if username in reminders_per_user and 0 <= index < len(reminders_per_user[username]):
+        reminders_per_user[username].pop(index)
+    return redirect(url_for('reminder', username=username))
+
+
+@app.route('/add_reminder', methods=['POST'])
+def add_reminder():
+    if 'username' not in session:
+        flash('You need to sign in first.')
+        return redirect(url_for('signin'))
+    
+    username = session['username']
+    pill_name = request.form.get('pill_name').strip()
+    time = request.form.get('time').strip()
+    
+    if pill_name and time:
+        reminders_per_user[username].append({'pill_name': pill_name, 'time': time})
+        flash('Reminder added successfully!')
+    else:
+        flash('Please provide both pill name and time.')
+    
+    return redirect(url_for('reminder'))  # Redirect to the correct route
+
+
+
+@app.route('/remove_reminder/<int:index>')
+def remove_reminder(index):
+    if 'username' not in session:
+        flash('You need to sign in first.')
+        return redirect(url_for('signin'))
+    username = session['username']
+    if 0 <= index < len(reminders_per_user.get(username, [])):
+        reminders_per_user[username].pop(index)
+        flash('Reminder removed successfully!')
+    else:
+        flash('Invalid reminder index.')
+    return redirect(url_for('reminder'))  
+
 
 if __name__ == '__main__':
     app.run(debug=True)

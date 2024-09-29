@@ -1,4 +1,3 @@
-Username: 12023002026039, Email: sagnikd587@gmail.com, Password: 898998
-Username: 12023002026039, Email: sdey03575@gmail.com, Password: poio
-Username: hack95, Email: subratadey81831@gmail.com, Password: 09909
-Username: RandInt, Email: src@gmail.com, Password: 989898
+Username: abc, Email: abc@gmail.com, Password: 1234
+Username: xyz, Email: xyz@gmail.com, Password: 1234
+Username: 1, Email: 1@gmail.com, Password: 1

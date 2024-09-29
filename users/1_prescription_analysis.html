@@ -72,8 +72,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Prescription Analysis for {{ username }}</h1>
-        <form action="{{ url_for('analyze_prescription', username=username) }}" method="post" enctype="multipart/form-data">
+        <h1>Prescription Analysis for 1</h1>
+        <form action="/analyze_prescription/1" method="post" enctype="multipart/form-data">
             <label for="prev_prescription">Previous Prescription:</label>
             <input type="file" id="prev_prescription" name="prev_prescription" accept=".pdf" required>
             <br>
@@ -83,35 +83,7 @@
             <input type="submit" value="Analyze">
         </form>
 
-        {% if prev_prescription_text is defined and latest_prescription_text is defined %}
-            <h2>Extracted Prescription Text:</h2>
-            
-            <h3>Previous Prescription:</h3>
-            <div class="prescription-text">{{ prev_prescription_text }}</div>
-
-            <h3>Latest Prescription:</h3>
-            <div class="prescription-text">{{ latest_prescription_text }}</div>
-
-            {% if common_medications %}
-                <div class="common-medications">
-                    <h3>Common Medications:</h3>
-                    <ul>
-                        {% for medication in common_medications %}
-                            <li>{{ medication }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% else %}
-                <p>No common medications found between the two prescriptions.</p>
-            {% endif %}
-            
-            <h3>Medication Dosage Forms:</h3>
-            <ul>
-                {% for med in latest_medications %}
-                    <li>{{ med[0] }} - Dosage Form: {{ med[2]['Dosage Form'].values[0] }} - Strength: {{ med[1] }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+        
     </div>
 </body>
 </html>
