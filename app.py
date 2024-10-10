@@ -177,15 +177,8 @@ def reminder(username):
     return render_template('reminder.html', username=username, reminders=user_reminders)
 
 
-@app.route('/reminder/<username>/delete/<int:index>')
-def delete_reminder(username, index):
-    if username in reminders_per_user and 0 <= index < len(reminders_per_user[username]):
-        reminders_per_user[username].pop(index)
-    return redirect(url_for('reminder', username=username))
-
-
-@app.route('/add_reminder', methods=['POST'])
-def add_reminder():
+@app.route('/add_reminder/<username>', methods=['GET','POST'])
+def add_reminder(username):
     if 'username' not in session:
         flash('You need to sign in first.')
         return redirect(url_for('signin'))
