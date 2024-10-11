@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Reminders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='reminder.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Your Reminders</h2>
+        <form method="POST">
+            <label for="pill_name">Medicine Name:</label>
+            <input type="text" name="pill_name" required><br>
+
+            <label for="time">Time (HH:MM 24-hour):</label>
+            <input type="text" name="time" placeholder="e.g., 08:00" required><br>
+
+            <button type="submit">Add Reminder</button>
+        </form>
+
+        <h3>Current Reminders:</h3>
+        {% if reminders %}
+            <ul class="reminder-list">
+            {% for reminder in reminders %}
+                <li>
+                    {{ reminder.pill_name }} at {{ reminder.time }}
+                    <a href="{{ url_for('remove_reminder', index=loop.index0) }}">Remove</a>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No reminders set yet.</p>
+        {% endif %}
+
+        <a href="{{ url_for('user', username=session['username']) }}">Back to Dashboard</a>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flash-messages">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>

@@ -1,15 +1,33 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash,session
 import os
 import PyPDF2
 import re
 import io
 import pandas as pd
+from flask_mail import Mail,Message
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
 
 # Load the medicine dataset
 medicine_data = pd.read_csv('/workspaces/Medbud/mnt/data/medicine_dataset.csv')
 
 app = Flask(__name__)
 app.secret_key = 'sagnikd2345678900000000'
+
+# Flask-Mail Configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'  
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  
+app.config['MAIL_PASSWORD'] = 'your_email_password'
+
+mail = Mail(app)
+
+# Initialize APScheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
+
+reminders_per_user = {}
 
 # Function to extract text from the uploaded PDF
 def extract_text_from_pdf(file_storage):
@@ -103,6 +121,32 @@ def suggest_medicines_for_indications(indications):
     
     return suggested_medicines
 
+def get_user_email(username):
+    if not os.path.exists('users.txt'):
+        return None
+    with open('users.txt', 'r') as file:
+        for line in file:
+            parts = line.strip().split(", ")
+            if len(parts) >= 2:
+                user_part = parts[0].split(": ")[1].strip()
+                email_part = parts[1].split(": ")[1].strip()
+                if user_part.lower() == username.lower():
+                    return email_part
+    return None
+
+def send_reminder_email(username, pill_name, time):
+    user_email = get_user_email(username)
+    if not user_email:
+        print(f"No email found for user {username}")
+        return
+
+    msg = Message(subject="Medicine Reminder",
+                  sender=app.config['MAIL_USERNAME'],
+                  recipients=[user_email])
+    msg.body = f"Hello {username},\n\nThis is your reminder to take your medicine: {pill_name} at {time}.\n\nStay Healthy!"
+    mail.send(msg)
+    print(f"Sent reminder to {user_email} for {pill_name} at {time}.")
+
 @app.route('/')
 def main_page():
     return render_template('first.html')
@@ -149,6 +193,12 @@ def signin():
         flash('Invalid Username or Password')
         return redirect(url_for('signin'))
     return render_template('signin.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    flash('You have been logged out.')
+    return redirect(url_for('signin'))
 
 @app.route('/users/<username>')
 def user(username):
@@ -199,6 +249,72 @@ def analyze_symptoms(username):
     else:
         questions = get_symptom_questions()
         return render_template('symptom_analyzer.html', username=username, questions=questions)
+
+@app.route('/reminders', methods=['GET', 'POST'])
+def reminders():
+    if 'username' not in session:
+        flash('You need to sign in first.')
+        return redirect(url_for('signin'))
+
+    username = session['username']
+
+    if request.method == 'POST':
+        pill_name = request.form.get('pill_name').strip()
+        time_str = request.form.get('time').strip()
+
+        if not pill_name or not time_str:
+            flash('Both pill name and time are required.')
+            return redirect(url_for('reminders'))
+
+        # Validate time format HH:MM (24-hour)
+        try:
+            time_obj = datetime.strptime(time_str, '%H:%M')
+            time_formatted = time_obj.strftime('%H:%M')
+        except ValueError:
+            flash('Invalid time format. Please use HH:MM in 24-hour format.')
+            return redirect(url_for('reminders'))
+
+        # Add reminder to the user's list
+        reminders_per_user.setdefault(username, []).append({'pill_name': pill_name, 'time': time_formatted})
+        flash('Reminder added successfully!')
+
+        # Schedule the email reminder
+        job_id = f"{username}_{pill_name}_{time_formatted}"
+        scheduler.add_job(func=send_reminder_email,
+                          trigger='cron',
+                          hour=time_obj.hour,
+                          minute=time_obj.minute,
+                          args=[username, pill_name, time_formatted],
+                          id=job_id,
+                          replace_existing=True)
+
+        return redirect(url_for('reminders'))
+
+    user_reminders = reminders_per_user.get(username, [])
+    return render_template('reminder.html', reminders=user_reminders)
+
+@app.route('/remove_reminder/<int:index>')
+def remove_reminder(index):
+    if 'username' not in session:
+        flash('You need to sign in first.')
+        return redirect(url_for('signin'))
+
+    username = session['username']
+    user_reminders = reminders_per_user.get(username, [])
+
+    if 0 <= index < len(user_reminders):
+        reminder = user_reminders.pop(index)
+        flash('Reminder removed successfully!')
+
+        # Remove the scheduled job
+        job_id = f"{username}_{reminder['pill_name']}_{reminder['time']}"
+        scheduler.remove_job(job_id)
+
+    else:
+        flash('Invalid reminder index.')
+
+    return redirect(url_for('reminders'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
