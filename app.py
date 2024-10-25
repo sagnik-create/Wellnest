@@ -28,43 +28,53 @@ def extract_lab_data(report_text):
     name_match = re.search(name_pattern, report_text)
     patient_name = name_match.group(1) if name_match else "Unknown"
 
-    test_data = []
-    test_pattern = r"Test Name\s*Value\s*Unit\s*Bio\. Ref Interval\n([\s\S]+?)\n\n"
-    tests_match = re.search(test_pattern, report_text)
-
-    if tests_match:
-        tests_block = tests_match.group(1)
-        test_lines = tests_block.split("\n")
-        for line in test_lines:
-            match = re.match(r"(\w+[\w\s]*?)\s*([\d.]+)\s*(\w+)\s*([\d.\s-]+)", line)
-            if match:
-                test_name, value, unit, reference_range = match.groups()
-                test_data.append({
-                    'test_name': test_name,
-                    'value': float(value),
-                    'unit': unit,
-                    'reference_range': reference_range
-                })
+    test_data = {}
+    sections = re.split(r'\n(?=[A-Z][a-z]+ Profile|DEPARTMENT OF)', report_text)
+    
+    for section in sections:
+        section_name = re.match(r'([A-Z][a-z]+ Profile|DEPARTMENT OF [A-Z]+)', section)
+        if section_name:
+            section_name = section_name.group(1)
+            test_data[section_name] = []
+            
+            pattern = r'(\w+[\w\s(),-]+?)\s+([\d.]+)\s*(\w+/?\w*)\s*([\d.\s-]+|[<>]=?\s*[\d.]+)'
+            matches = re.findall(pattern, section)
+            
+            for match in matches:
+                test_name, value, unit, reference_range = match
+                try:
+                    test_data[section_name].append({
+                        'test_name': test_name.strip(),
+                        'value': float(value),
+                        'unit': unit,
+                        'reference_range': reference_range.strip()
+                    })
+                except ValueError:
+                    # If we can't convert the value to float, skip this test
+                    continue
 
     return patient_name, test_data
 
 # Function to compare lab reports
 def compare_lab_reports(prev_report, latest_report):
-    prev_data = {test['test_name']: test for test in prev_report}
-    latest_data = {test['test_name']: test for test in latest_report}
-
     comparison = []
-    for test_name in prev_data.keys() & latest_data.keys():
-        prev_test = prev_data[test_name]
-        latest_test = latest_data[test_name]
-        change = latest_test['value'] - prev_test['value']
-        comparison.append({
-            'test_name': test_name,
-            'prev_value': prev_test['value'],
-            'latest_value': latest_test['value'],
-            'unit': prev_test['unit'],
-            'change': 'Increased' if change > 0 else 'Decreased' if change < 0 else 'No change'
-        })
+    for section in prev_report.keys() & latest_report.keys():
+        prev_tests = {test['test_name']: test for test in prev_report[section]}
+        latest_tests = {test['test_name']: test for test in latest_report[section]}
+        
+        for test_name in prev_tests.keys() & latest_tests.keys():
+            prev_test = prev_tests[test_name]
+            latest_test = latest_tests[test_name]
+            change = latest_test['value'] - prev_test['value']
+            comparison.append({
+                'section': section,
+                'test_name': test_name,
+                'prev_value': prev_test['value'],
+                'latest_value': latest_test['value'],
+                'unit': prev_test['unit'],
+                'reference_range': latest_test['reference_range'],
+                'change': 'Increased' if change > 0 else 'Decreased' if change < 0 else 'No change'
+            })
 
     return comparison
 

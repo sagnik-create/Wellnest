@@ -43,16 +43,24 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
         th, td {
             padding: 10px;
             border: 1px solid #ddd;
+            text-align: left;
         }
         th {
             background-color: #f2f2f2;
         }
         .highlight {
-            color: red;
+            font-weight: bold;
+        }
+        .increased {
+            color: #e74c3c;
+        }
+        .decreased {
+            color: #2ecc71;
         }
     </style>
 </head>
@@ -72,28 +80,46 @@
 
         {% if comparison_result %}
             <h2>Comparison Results:</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Test Name</th>
-                        <th>Previous Value</th>
-                        <th>Latest Value</th>
-                        <th>Unit</th>
-                        <th>Change</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for result in comparison_result %}
-                    <tr>
-                        <td>{{ result['test_name'] }}</td>
-                        <td>{{ result['prev_value'] }}</td>
-                        <td>{{ result['latest_value'] }}</td>
-                        <td>{{ result['unit'] }}</td>
-                        <td>{{ result['change'] }}</td>
-                    </tr>
-                    {% endfor %}
+            <p>Previous Report Patient: {{ prev_patient_name }}</p>
+            <p>Latest Report Patient: {{ latest_patient_name }}</p>
+            
+            {% set current_section = '' %}
+            {% for result in comparison_result %}
+                {% if result.section != current_section %}
+                    {% if current_section != '' %}
+                        </tbody>
+                        </table>
+                    {% endif %}
+                    <h3>{{ result.section }}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Previous Value</th>
+                                <th>Latest Value</th>
+                                <th>Unit</th>
+                                <th>Reference Range</th>
+                                <th>Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    {% set current_section = result.section %}
+                {% endif %}
+                <tr>
+                    <td>{{ result.test_name }}</td>
+                    <td>{{ result.prev_value }}</td>
+                    <td>{{ result.latest_value }}</td>
+                    <td>{{ result.unit }}</td>
+                    <td>{{ result.reference_range }}</td>
+                    <td class="highlight {% if result.change == 'Increased' %}increased{% elif result.change == 'Decreased' %}decreased{% endif %}">
+                        {{ result.change }}
+                    </td>
+                </tr>
+            {% endfor %}
+            {% if current_section != '' %}
                 </tbody>
-            </table>
+                </table>
+            {% endif %}
         {% endif %}
     </div>
 </body>
