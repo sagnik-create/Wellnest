@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='pgstyles.css') }}">
+    <link rel="stylesheet" href="/static/pgstyles.css">
 </head>
 <body>
     <div class="container">
         <nav>
             <ul>
-                <li><a href="{{ url_for('analyze_report', username=username) }}">Lab Report Analyzer</a></li>
-                <li><a href="{{ url_for('analyze_symptoms', username=username) }}">Symptoms Analyzer</a></li>
+                <li><a href="/analyze_report/posto">Lab Report Analyzer</a></li>
+                <li><a href="/analyze_symptoms/posto">Symptoms Analyzer</a></li>
             </ul>
         </nav>
         <div class="dashboard">
@@ -33,12 +33,12 @@
                 <div class="card">
                     <h3>Lab Report Analyzer</h3>
                     <p>Compare Lab Reports for better medical insights</p>
-                    <a href="{{ url_for('analyze_report', username=username) }}">Get Started</a>
+                    <a href="/analyze_report/posto">Get Started</a>
                 </div>
                 <div class="card">
                     <h3>Symptoms Analyzer</h3>
                     <p>Analyze your symptoms and get recommendations.</p>
-                    <a href="{{ url_for('analyze_symptoms', username=username) }}">Get started today</a>
+                    <a href="/analyze_symptoms/posto">Get started today</a>
                 </div>
             </div>
             <div class="chart">

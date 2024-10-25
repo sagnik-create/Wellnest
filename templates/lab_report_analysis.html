@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Report Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .highlight {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lab Report Analysis for {{ username }}</h1>
+
+        <form action="{{ url_for('analyze_report', username=username) }}" method="post" enctype="multipart/form-data">
+            <label for="prev_report">Previous Report:</label>
+            <input type="file" id="prev_report" name="prev_report" accept=".pdf" required>
+            <br>
+            <label for="latest_report">Latest Report:</label>
+            <input type="file" id="latest_report" name="latest_report" accept=".pdf" required>
+            <br>
+            <input type="submit" value="Analyze">
+        </form>
+
+        {% if comparison_result %}
+            <h2>Comparison Results:</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Previous Value</th>
+                        <th>Latest Value</th>
+                        <th>Unit</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in comparison_result %}
+                    <tr>
+                        <td>{{ result['test_name'] }}</td>
+                        <td>{{ result['prev_value'] }}</td>
+                        <td>{{ result['latest_value'] }}</td>
+                        <td>{{ result['unit'] }}</td>
+                        <td>{{ result['change'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</body>
+</html>
