@@ -7,7 +7,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 app = Flask(__name__)
 app.secret_key = 'sagnikd2345678900000000'
 
-# Function to extract text from the uploaded PDF
 def extract_text_from_pdf(file_storage):
     text = ""
     try:
@@ -22,40 +21,42 @@ def extract_text_from_pdf(file_storage):
         print(f"Error reading PDF file: {e}")
     return text
 
-# Function to extract relevant information from the lab report
 def extract_lab_data(report_text):
     name_pattern = r"Patient Name\s*:\s*([\w\s]+)"
     name_match = re.search(name_pattern, report_text)
-    patient_name = name_match.group(1) if name_match else "Unknown"
+    patient_name = name_match.group(1).strip() if name_match else "Unknown"
 
     test_data = {}
     sections = re.split(r'\n(?=[A-Z][a-z]+ Profile|DEPARTMENT OF)', report_text)
     
     for section in sections:
-        section_name = re.match(r'([A-Z][a-z]+ Profile|DEPARTMENT OF [A-Z]+)', section)
-        if section_name:
-            section_name = section_name.group(1)
+        section_name_match = re.match(r'([A-Z][a-z]+ Profile|DEPARTMENT OF [A-Z]+)', section)
+        if section_name_match:
+            section_name = section_name_match.group(1)
             test_data[section_name] = []
             
-            pattern = r'(\w+[\w\s(),-]+?)\s+([\d.]+)\s*(\w+/?\w*)\s*([\d.\s-]+|[<>]=?\s*[\d.]+)'
-            matches = re.findall(pattern, section)
+            pattern = r'([\w\s(),-]+?)\s*:\s*([\d.]+)\s*(\w+/?\w*)\s*([\d.\s-]+|[<>]=?\s*[\d.]+|[\w\s-]+)'
+            matches = re.findall(pattern, section, re.MULTILINE)
             
             for match in matches:
                 test_name, value, unit, reference_range = match
                 try:
                     test_data[section_name].append({
                         'test_name': test_name.strip(),
-                        'value': float(value),
-                        'unit': unit,
+                        'value': float(value) if value.replace('.', '').isdigit() else value,
+                        'unit': unit.strip(),
                         'reference_range': reference_range.strip()
                     })
                 except ValueError:
-                    # If we can't convert the value to float, skip this test
-                    continue
+                    test_data[section_name].append({
+                        'test_name': test_name.strip(),
+                        'value': value.strip(),
+                        'unit': unit.strip(),
+                        'reference_range': reference_range.strip()
+                    })
 
     return patient_name, test_data
 
-# Function to compare lab reports
 def compare_lab_reports(prev_report, latest_report):
     comparison = []
     for section in prev_report.keys() & latest_report.keys():
@@ -65,7 +66,12 @@ def compare_lab_reports(prev_report, latest_report):
         for test_name in prev_tests.keys() & latest_tests.keys():
             prev_test = prev_tests[test_name]
             latest_test = latest_tests[test_name]
-            change = latest_test['value'] - prev_test['value']
+            if isinstance(prev_test['value'], (int, float)) and isinstance(latest_test['value'], (int, float)):
+                change = latest_test['value'] - prev_test['value']
+                change_status = 'Increased' if change > 0 else 'Decreased' if change < 0 else 'No change'
+            else:
+                change = 'N/A'
+                change_status = 'Cannot compare'
             comparison.append({
                 'section': section,
                 'test_name': test_name,
@@ -73,7 +79,7 @@ def compare_lab_reports(prev_report, latest_report):
                 'latest_value': latest_test['value'],
                 'unit': prev_test['unit'],
                 'reference_range': latest_test['reference_range'],
-                'change': 'Increased' if change > 0 else 'Decreased' if change < 0 else 'No change'
+                'change': change_status
             })
 
     return comparison
