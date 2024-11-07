@@ -7,3 +7,6 @@ Username: posto, Email: posto@gmail.com, Password: numne
 Username: Sagnik Dey, Email: sagnikd681@gmail.com, Password: opioi
 Username: Sagnik , Email: sagnikd681@gmail.com, Password: pooss
 Username: Delhi Don, Email: sdey03575@gmail.com, Password: password
+Username: BizwizSagnik, Email: sagnikd681@gmail.com, Password: 98989
+Username: BizwizSagnik, Email: sdey03575@gmail.com, Password: 097878
+Username: Sagnik Dey, Email: sagnikd681@gmail.com, Password: inin

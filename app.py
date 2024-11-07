@@ -1,7 +1,7 @@
 import os
 import re
 import io
-import PyPDF2
+import pdfplumber
 from flask import Flask, render_template, request, redirect, url_for, flash
 
 app = Flask(__name__)
@@ -12,12 +12,10 @@ def extract_text_from_pdf(file_storage):
     try:
         pdf_bytes = file_storage.read()
         pdf_stream = io.BytesIO(pdf_bytes)
-        pdf_reader = PyPDF2.PdfReader(pdf_stream)
-        num_pages = len(pdf_reader.pages)
-        for page_num in range(num_pages):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text()
-    except PyPDF2.errors.PdfReadError as e:
+        with pdfplumber.open(pdf_stream) as pdf:
+            for page in pdf.pages:
+                text += page.extract_text() + "\n"
+    except Exception as e:
         print(f"Error reading PDF file: {e}")
     return text
 
