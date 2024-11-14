@@ -10,3 +10,9 @@ Username: Delhi Don, Email: sdey03575@gmail.com, Password: password
 Username: BizwizSagnik, Email: sagnikd681@gmail.com, Password: 98989
 Username: BizwizSagnik, Email: sdey03575@gmail.com, Password: 097878
 Username: Sagnik Dey, Email: sagnikd681@gmail.com, Password: inin
+Username: BizwizSagnik, Email: k@gmail.com, Password: scrypt:32768:8:1$ofPVAKAEGPdjsU2L$38f9b274649c1e3dc4ef35094b3848da5f98596f9f9358387c75c36e0ebd82132641dfa82b2d3e1ba4e18208be45303c06305c2c4c0b82d3e5deda8a034a58e8, Type: patient
+Username: Sagnik Dey, Email: sdey03575@gmail.com, Password: scrypt:32768:8:1$igDylrZQ2lan5KJm$e893eca18df49a645758de8605a84d2cf6cd485d6da3272761f03a2b5cdeabc2e66a7a5cd822c1f3bec9913c2b2516dc3a5cd1fd0f5e981867851125d2fc6f37, Type: patient
+Username: Sagnik Dey, Email: sdey03575@gmail.com, Password: scrypt:32768:8:1$8FIIoo1WXxFmkQLX$950f897b6389e3e5f2ad15da794d96a675cda16f1b79d17bc9fae587977dd1dd9b74923d7e8d88d6bd829a596026267d4c87a5bf072f1b79b350c7f338a8966a, Type: doctor
+Username: Sagnik Dey, Email: sagnikd681@gmail.com, Password: scrypt:32768:8:1$BUD0PKY4cJD89Ac8$3f598b08b22a84436d95cc83706c64f537c6fe70b47091b7b51fe1c9d6d3122c62728a6eedc7ae807ba35cb3b35ad1e63df4b9fccfa56785ce585eb8ee086290, Type: patient
+Username: BizwizSagnik, Email: sagnikd681@gmail.com, Password: scrypt:32768:8:1$uxYCCLYaJ9KFIJsW$e89ca87b2868c9b7a38d057f2366f1c331f6c6cbd5f3a8e47cbd8db36a0b6a289fd6fdf2d296bb6d2f35997ec62bc3665072bbfda5b198487de46bfeab0bbc10, Type: doctor
+Username: Sagnik Dey, Email: subratadey81831@gmail.com, Password: scrypt:32768:8:1$3zFBswfkPV2cqXYo$395a81b13dc11095db5f89e10cf611eba2db5a0d5a405721a0b66d16e6f83c9314ff3bea4392bbad3a3e466448c295c6677b8a9657818f23876ee178156294b5, Type: doctor

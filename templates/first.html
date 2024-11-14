@@ -118,8 +118,10 @@
 </head>
 <body>
     <header class="header">
-        <a href="signup" class="button">Sign Up</a>
-        <a href="signin" class="button">Sign In</a>
+        <a href="{{ url_for('signup') }}" class="button">Sign Up</a>
+        <a href="{{ url_for('signin') }}" class="button">Sign In</a>
+        <a href="{{ url_for('signup', type='doctor') }}" class="button">Join as a Doctor</a>
+        <a href="{{ url_for('doctors_forum') }}" class="button">Doctor's Forum</a>
     </header>
 
     <main class="container">

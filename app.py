@@ -2,7 +2,8 @@ import os
 import re
 import io
 import pdfplumber
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = 'sagnikd2345678900000000'
@@ -82,6 +83,7 @@ def compare_lab_reports(prev_report, latest_report):
 
     return comparison
 
+
 @app.route('/')
 def main_page():
     return render_template('first.html')
@@ -92,16 +94,32 @@ def signup():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        user_type = request.form.get('user_type', 'patient')  # Default to 'patient' if not specified
+        hashed_password = generate_password_hash(password)
+        
         with open('users.txt', 'a') as file:
-            file.write(f"Username: {username}, Email: {email}, Password: {password}\n")
-        user_html = render_template('user.html', username=username)
+            file.write(f"Username: {username}, Email: {email}, Password: {hashed_password}, Type: {user_type}\n")
+        
+        if user_type == 'doctor':
+            user_html = render_template('doctor_dashboard.html', username=username, contributions=0)
+        else:
+            user_html = render_template('user.html', username=username)
+        
         user_file_path = os.path.join('users', f"{username}.html")
         os.makedirs(os.path.dirname(user_file_path), exist_ok=True)
         with open(user_file_path, 'w') as file:
             file.write(user_html)
+        
+        session['username'] = username
+        session['user_type'] = user_type
+        flash('Signup successful! Welcome to Wellnest.')
         return redirect(url_for('user', username=username))
     else:
-        return render_template('index.html')
+        user_type = request.args.get('type', 'patient')
+        if user_type == 'doctor':
+            return render_template('doctor_signup.html')
+        else:
+            return render_template('index.html')
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
@@ -111,10 +129,13 @@ def signin():
         with open('users.txt', 'r') as file:
             for line in file:
                 parts = line.strip().split(", ")
-                if len(parts) == 3:
+                if len(parts) == 4:
                     user_part = parts[0].split(": ")[1]
                     pass_part = parts[2].split(": ")[1]
-                    if user_part == username and pass_part == password:
+                    user_type = parts[3].split(": ")[1]
+                    if user_part == username and check_password_hash(pass_part, password):
+                        session['username'] = username
+                        session['user_type'] = user_type
                         user_file_path = os.path.join('users', f"{username}.html")
                         if os.path.exists(user_file_path):
                             return redirect(url_for('user', username=username))
@@ -127,6 +148,8 @@ def signin():
 
 @app.route('/users/<username>')
 def user(username):
+    if 'username' not in session or session['username'] != username:
+        return redirect(url_for('signin'))
     user_file_path = os.path.join('users', f"{username}.html")
     if os.path.exists(user_file_path):
         with open(user_file_path, 'r') as user_file:
@@ -137,6 +160,8 @@ def user(username):
 
 @app.route('/analyze_report/<username>', methods=['GET', 'POST'])
 def analyze_report(username):
+    if 'username' not in session or session['username'] != username:
+        return redirect(url_for('signin'))
     if request.method == 'POST':
         prev_report_file = request.files.get('prev_report')
         latest_report_file = request.files.get('latest_report')
@@ -162,7 +187,61 @@ def analyze_report(username):
 
 @app.route('/analyze_symptoms/<username>')
 def analyze_symptoms(username):
+    if 'username' not in session or session['username'] != username:
+        return redirect(url_for('signin'))
     return render_template('symptoms_analysis.html', username=username)
+
+@app.route('/doctors_forum')
+def doctors_forum():
+    analyses = []
+    with open('shared_analyses.txt', 'r') as file:
+        for line in file:
+            parts = line.strip().split(", ")
+            analyses.append({
+                'username': parts[0],
+                'analysis_id': parts[1],
+                'timestamp': parts[2]
+            })
+    return render_template('doctors_forum.html', analyses=analyses)
+
+@app.route('/share_analysis/<username>/<analysis_id>')
+def share_analysis(username, analysis_id):
+    if 'username' not in session or session['username'] != username:
+        return redirect(url_for('signin'))
+    with open('shared_analyses.txt', 'a') as file:
+        file.write(f"{username}, {analysis_id}, {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    flash('Analysis shared successfully')
+    return redirect(url_for('analyze_report', username=username))
+
+@app.route('/view_analysis/<analysis_id>')
+def view_analysis(analysis_id):
+    if 'user_type' not in session or session['user_type'] != 'doctor':
+        return redirect(url_for('signin'))
+    # Here you would retrieve the analysis data based on the analysis_id
+    # For this example, we'll just pass the analysis_id to the template
+    return render_template('view_analysis.html', analysis_id=analysis_id)
+
+@app.route('/add_comment/<analysis_id>', methods=['POST'])
+def add_comment(analysis_id):
+    if 'user_type' not in session or session['user_type'] != 'doctor':
+        return redirect(url_for('signin'))
+    comment = request.form['comment']
+    doctor_username = session['username']
+    with open('comments.txt', 'a') as file:
+        file.write(f"{analysis_id}, {doctor_username}, {comment}\n")
+    # Increment the doctor's contribution count
+    increment_contribution(doctor_username)
+    flash('Comment added successfully')
+    return redirect(url_for('view_analysis', analysis_id=analysis_id))
+
+def increment_contribution(username):
+    user_file_path = os.path.join('users', f"{username}.html")
+    with open(user_file_path, 'r') as file:
+        content = file.read()
+    contributions = int(re.search(r'Contributions: (\d+)', content).group(1))
+    new_content = content.replace(f'Contributions: {contributions}', f'Contributions: {contributions + 1}')
+    with open(user_file_path, 'w') as file:
+        file.write(new_content)
 
 if __name__ == '__main__':
     app.run(debug=True)
