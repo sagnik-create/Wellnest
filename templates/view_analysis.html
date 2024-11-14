@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor's Forum</title>
+    <title>View Analysis</title>
     <style>
         :root {
             --primary-color: #4caf50;
@@ -34,41 +34,19 @@
             color: var(--primary-color);
         }
 
-        .analysis-list {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .analysis-item {
+        pre {
             background-color: #f9f9f9;
-            margin-bottom: 10px;
             padding: 10px;
             border-radius: 5px;
-        }
-
-        .analysis-link {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .analysis-link:hover {
-            text-decoration: underline;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Doctor's Forum</h1>
-        <ul class="analysis-list">
-            {% for analysis in analyses %}
-            <li class="analysis-item">
-                <a href="{{ analysis.analysis_link }}" class="analysis-link">
-                    {{ analysis.analysis_type }} for {{ analysis.patient_name }}
-                </a>
-                <p>Shared by: {{ analysis.username }} on {{ analysis.timestamp }}</p>
-            </li>
-            {% endfor %}
-        </ul>
+        <h1>Analysis Details</h1>
+        <pre>{{ content }}</pre>
     </div>
 </body>
 </html>

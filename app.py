@@ -4,6 +4,8 @@ import io
 import pdfplumber
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+import uuid
 
 app = Flask(__name__)
 app.secret_key = 'sagnikd2345678900000000'
@@ -175,11 +177,23 @@ def analyze_report(username):
 
             comparison_result = compare_lab_reports(prev_report_data, latest_report_data)
 
+            # Generate a unique analysis ID
+            analysis_id = str(uuid.uuid4())
+
+            # Store the analysis results
+            analysis_file_path = os.path.join('analyses', f"{analysis_id}.txt")
+            os.makedirs(os.path.dirname(analysis_file_path), exist_ok=True)
+            with open(analysis_file_path, 'w') as f:
+                f.write(f"Previous Patient: {prev_patient_name}\n")
+                f.write(f"Latest Patient: {latest_patient_name}\n")
+                f.write(str(comparison_result))
+
             return render_template('lab_report_analysis.html',
                                    username=username,
                                    prev_patient_name=prev_patient_name,
                                    latest_patient_name=latest_patient_name,
-                                   comparison_result=comparison_result)
+                                   comparison_result=comparison_result,
+                                   analysis_id=analysis_id)
         else:
             return "No files received"
     else:
@@ -193,33 +207,58 @@ def analyze_symptoms(username):
 
 @app.route('/doctors_forum')
 def doctors_forum():
+    if 'user_type' not in session or session['user_type'] != 'doctor':
+        flash('You must be logged in as a doctor to access the forum.')
+        return redirect(url_for('signin'))
+
     analyses = []
     with open('shared_analyses.txt', 'r') as file:
         for line in file:
-            parts = line.strip().split(", ")
+            username, analysis_id, patient_name, analysis_type, analysis_link, timestamp = line.strip().split(',')
             analyses.append({
-                'username': parts[0],
-                'analysis_id': parts[1],
-                'timestamp': parts[2]
+                'username': username,
+                'patient_name': patient_name,
+                'analysis_type': analysis_type,
+                'analysis_link': analysis_link,
+                'timestamp': timestamp
             })
+
     return render_template('doctors_forum.html', analyses=analyses)
+
 
 @app.route('/share_analysis/<username>/<analysis_id>')
 def share_analysis(username, analysis_id):
     if 'username' not in session or session['username'] != username:
         return redirect(url_for('signin'))
+    
+    # Read the analysis file to get patient name and analysis type
+    analysis_file_path = os.path.join('analyses', f"{analysis_id}.txt")
+    with open(analysis_file_path, 'r') as f:
+        content = f.read()
+        patient_name = re.search(r"Latest Patient: (.+)", content).group(1)
+        analysis_type = "Lab Report Comparison"  # You can make this more specific if needed
+
+    # Create a link to view the analysis
+    analysis_link = url_for('view_analysis', analysis_id=analysis_id, _external=True)
+
+    # Store the shared analysis information
     with open('shared_analyses.txt', 'a') as file:
-        file.write(f"{username}, {analysis_id}, {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-    flash('Analysis shared successfully')
+        file.write(f"{username},{analysis_id},{patient_name},{analysis_type},{analysis_link},{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+    flash('Analysis shared successfully to the Doctor\'s Forum')
     return redirect(url_for('analyze_report', username=username))
 
 @app.route('/view_analysis/<analysis_id>')
 def view_analysis(analysis_id):
     if 'user_type' not in session or session['user_type'] != 'doctor':
+        flash('You must be logged in as a doctor to view analyses.')
         return redirect(url_for('signin'))
-    # Here you would retrieve the analysis data based on the analysis_id
-    # For this example, we'll just pass the analysis_id to the template
-    return render_template('view_analysis.html', analysis_id=analysis_id)
+
+    analysis_file_path = os.path.join('analyses', f"{analysis_id}.txt")
+    with open(analysis_file_path, 'r') as f:
+        content = f.read()
+
+    return render_template('view_analysis.html', content=content, analysis_id=analysis_id)
 
 @app.route('/add_comment/<analysis_id>', methods=['POST'])
 def add_comment(analysis_id):
