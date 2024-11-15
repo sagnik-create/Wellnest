@@ -124,7 +124,11 @@
                 </table>
             {% endif %}
 
-            <a href="{{ url_for('share_analysis', username=username, analysis_id=analysis_id) }}" class="button">Post to Doctor's Forum</a>
+            <form action="{{ url_for('share_analysis', username=username, analysis_id=analysis_id) }}" method="post">
+                <input type="hidden" name="analysis_content" value="{{ analysis_content }}">
+                <input type="hidden" name="patient_name" value="{{ latest_patient_name }}">
+                <input type="submit" value="Post to Doctor's Forum" class="button">
+            </form>
         {% endif %}
     </div>
 </body>
