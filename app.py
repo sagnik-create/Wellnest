@@ -215,13 +215,14 @@ def doctors_forum():
         for line in file:
             parts = line.strip().split('|')
             if len(parts) == 6:
-                username, analysis_id, patient_name, analysis_type, timestamp, _ = parts
+                username, analysis_id, patient_name, analysis_type, timestamp, content = parts
                 analyses.append({
                     'username': username,
                     'analysis_id': analysis_id,
                     'patient_name': patient_name,
                     'analysis_type': analysis_type,
-                    'timestamp': timestamp
+                    'timestamp': timestamp,
+                    'content': content
                 })
 
     return render_template('doctors_forum.html', analyses=analyses)

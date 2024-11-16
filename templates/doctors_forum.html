@@ -5,70 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doctor's Forum</title>
     <style>
-        :root {
-            --primary-color: #4caf50;
-            --secondary-color: #45a049;
-            --text-color: #333;
-            --background-color: #f0f8f0;
-        }
-
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
+            font-family: Arial, sans-serif;
             line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
         }
-
         .container {
             max-width: 800px;
-            margin: 50px auto;
+            margin: 0 auto;
+            background-color: #fff;
             padding: 20px;
-            background-color: white;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        h1 {
-            color: var(--primary-color);
+        h1, h2, h3 {
+            color: #333;
         }
-
-        .analysis-list {
-            list-style-type: none;
-            padding: 0;
-        }
-
         .analysis-item {
             background-color: #f9f9f9;
-            margin-bottom: 10px;
-            padding: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
             border-radius: 5px;
         }
-
-        .analysis-link {
-            color: var(--primary-color);
-            text-decoration: none;
+        .analysis-header {
+            cursor: pointer;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
         }
-
-        .analysis-link:hover {
-            text-decoration: underline;
+        .analysis-content {
+            display: none;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .show {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Doctor's Forum</h1>
-        <ul class="analysis-list">
-            {% for analysis in analyses %}
-            <li class="analysis-item">
-                <a href="{{ analysis.analysis_link }}" class="analysis-link">
-                    {{ analysis.analysis_type }} for {{ analysis.patient_name }}
-                </a>
-                <p>Shared by: {{ analysis.username }} on {{ analysis.timestamp }}</p>
-            </li>
-            {% endfor %}
-        </ul>
+        {% for analysis in analyses %}
+            <div class="analysis-item">
+                <div class="analysis-header" onclick="toggleAnalysis('{{ analysis.analysis_id }}')">
+                    <h2>{{ analysis.analysis_type }} for {{ analysis.patient_name }}</h2>
+                    <p>Shared by: {{ analysis.username }} on {{ analysis.timestamp }}</p>
+                </div>
+                <div id="{{ analysis.analysis_id }}" class="analysis-content">
+                    <h3>Analysis Details:</h3>
+                    {% set content_lines = analysis.content.split('\n') %}
+                    {% if content_lines|length > 1 %}
+                        <p><strong>Previous Patient:</strong> {{ content_lines[0].split(': ')[-1] }}</p>
+                        <p><strong>Latest Patient:</strong> {{ content_lines[1].split(': ')[-1] }}</p>
+                    {% endif %}
+                    {% set comparison_data = analysis.content.split('[')[-1].split(']')[0] %}
+                    {% if comparison_data %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Section</th>
+                                    <th>Test Name</th>
+                                    <th>Previous Value</th>
+                                    <th>Latest Value</th>
+                                    <th>Unit</th>
+                                    <th>Reference Range</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in comparison_data.split('}, {') %}
+                                    {% set parts = item.replace('{', '').replace('}', '').split(', ') %}
+                                    <tr>
+                                        {% for part in parts %}
+                                            {% set key_value = part.split(': ') %}
+                                            {% if key_value|length > 1 %}
+                                                <td>{{ key_value[1].strip("'") }}</td>
+                                            {% else %}
+                                                <td></td>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No detailed comparison data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
     </div>
+
+    <script>
+        function toggleAnalysis(analysisId) {
+            var content = document.getElementById(analysisId);
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        }
+    </script>
 </body>
 </html>
