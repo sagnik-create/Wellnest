@@ -62,14 +62,35 @@
 <body>
     <div class="container">
         <h1>Analysis Details</h1>
-        <h2>{{ analysis_type }} for {{ patient_name }}</h2>
-        <p>Shared on: {{ timestamp }}</p>
-        {% if content %}
-            <pre>{{ content }}</pre>
-        {% else %}
-            <p class="error">No content available for this analysis.</p>
-        {% endif %}
-        <a href="{{ url_for('doctors_forum') }}" class="back-link">Back to Doctor's Forum</a>
+        <p><strong>Shared by:</strong> {{ analysis.username }}</p>
+        <p><strong>Analysis Type:</strong> {{ analysis.analysis_type }}</p>
+        <p><strong>Patient Name:</strong> {{ analysis.patient_name }}</p>
+        <p><strong>Timestamp:</strong> {{ analysis.timestamp }}</p>
+        <h2>Comparison Results:</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Test Name</th>
+                    <th>Previous Value</th>
+                    <th>Latest Value</th>
+                    <th>Unit</th>
+                    <th>Reference Range</th>
+                    <th>Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in analysis.content.split('[')[-1].split(']')[0].split('}, {') %}
+                    <tr>
+                        {% set data = item.replace('{', '').replace('}', '').split(', ') %}
+                        {% for d in data %}
+                            <td>{{ d.split(': ')[1].strip("'") }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('doctors_forum') }}">Back to Doctor's Forum</a>
     </div>
 </body>
 </html>

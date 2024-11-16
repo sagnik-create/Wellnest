@@ -217,8 +217,8 @@ def doctors_forum():
             if len(parts) == 6:
                 username, analysis_id, patient_name, analysis_type, timestamp, content = parts
                 analyses.append({
-                    'username': username,
                     'analysis_id': analysis_id,
+                    'username': username,
                     'patient_name': patient_name,
                     'analysis_type': analysis_type,
                     'timestamp': timestamp,
@@ -250,20 +250,31 @@ def view_analysis(analysis_id):
         flash('You must be logged in as a doctor to view analyses.')
         return redirect(url_for('signin'))
 
+    analysis_details = None
     with open('shared_analyses.txt', 'r') as file:
         for line in file:
             parts = line.strip().split('|')
             if len(parts) == 6 and parts[1] == analysis_id:
-                _, _, patient_name, analysis_type, timestamp, content = parts
-                return render_template('view_analysis.html', 
-                                       content=content, 
-                                       analysis_id=analysis_id, 
-                                       patient_name=patient_name, 
-                                       analysis_type=analysis_type, 
-                                       timestamp=timestamp)
+                username, _, patient_name, analysis_type, timestamp, content = parts
+                analysis_details = {
+                    'analysis_id': analysis_id,
+                    'username': username,
+                    'patient_name': patient_name,
+                    'analysis_type': analysis_type,
+                    'timestamp': timestamp,
+                    'content': content
+                }
+                break
 
+    if analysis_details:
+        return render_template(
+            'view_analysis.html',
+            analysis=analysis_details
+        )
+    
     flash('Analysis not found.')
     return redirect(url_for('doctors_forum'))
+
 
 @app.errorhandler(404)
 def page_not_found(e):

@@ -75,44 +75,31 @@
                 </div>
                 <div id="{{ analysis.analysis_id }}" class="analysis-content">
                     <h3>Analysis Details:</h3>
-                    {% set content_lines = analysis.content.split('\n') %}
-                    {% if content_lines|length > 1 %}
-                        <p><strong>Previous Patient:</strong> {{ content_lines[0].split(': ')[-1] }}</p>
-                        <p><strong>Latest Patient:</strong> {{ content_lines[1].split(': ')[-1] }}</p>
-                    {% endif %}
-                    {% set comparison_data = analysis.content.split('[')[-1].split(']')[0] %}
-                    {% if comparison_data %}
-                        <table>
-                            <thead>
+                    <p><strong>Previous Patient:</strong> {{ analysis.content.splitlines()[0].split(': ')[1] }}</p>
+                    <p><strong>Latest Patient:</strong> {{ analysis.content.splitlines()[1].split(': ')[1] }}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Section</th>
+                                <th>Test Name</th>
+                                <th>Previous Value</th>
+                                <th>Latest Value</th>
+                                <th>Unit</th>
+                                <th>Reference Range</th>
+                                <th>Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in analysis.content.split('[')[-1].split(']')[0].split('}, {') %}
                                 <tr>
-                                    <th>Section</th>
-                                    <th>Test Name</th>
-                                    <th>Previous Value</th>
-                                    <th>Latest Value</th>
-                                    <th>Unit</th>
-                                    <th>Reference Range</th>
-                                    <th>Change</th>
+                                    {% set data = item.replace('{', '').replace('}', '').split(', ') %}
+                                    {% for d in data %}
+                                        <td>{{ d.split(': ')[1].strip("'") }}</td>
+                                    {% endfor %}
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in comparison_data.split('}, {') %}
-                                    {% set parts = item.replace('{', '').replace('}', '').split(', ') %}
-                                    <tr>
-                                        {% for part in parts %}
-                                            {% set key_value = part.split(': ') %}
-                                            {% if key_value|length > 1 %}
-                                                <td>{{ key_value[1].strip("'") }}</td>
-                                            {% else %}
-                                                <td></td>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p>No detailed comparison data available.</p>
-                    {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         {% endfor %}

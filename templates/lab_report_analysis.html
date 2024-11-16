@@ -70,7 +70,6 @@
 <body>
     <div class="container">
         <h1>Lab Report Analysis for {{ username }}</h1>
-
         <form action="{{ url_for('analyze_report', username=username) }}" method="post" enctype="multipart/form-data">
             <label for="prev_report">Previous Report:</label>
             <input type="file" id="prev_report" name="prev_report" accept=".pdf" required>
@@ -123,13 +122,15 @@
                 </tbody>
                 </table>
             {% endif %}
-
-            <form action="{{ url_for('share_analysis', username=username, analysis_id=analysis_id) }}" method="post">
-                <input type="hidden" name="analysis_content" value="{{ analysis_content }}">
-                <input type="hidden" name="patient_name" value="{{ latest_patient_name }}">
-                <input type="submit" value="Post to Doctor's Forum" class="button">
-            </form>
         {% endif %}
+
+        <form action="{{ url_for('share_analysis', username=username, analysis_id=analysis_id) }}" method="post">
+            <input type="hidden" name="analysis_content" value="{{ analysis_content }}">
+            <input type="hidden" name="patient_name" value="{{ latest_patient_name }}">
+            <input type="submit" value="Post to Doctor's Forum" class="button">
+        </form>
+        <br>
+        <a href="{{ url_for('main_page') }}" class="button">Back to Main Page</a>
     </div>
 </body>
 </html>
