@@ -75,8 +75,8 @@
                 </div>
                 <div id="{{ analysis.analysis_id }}" class="analysis-content">
                     <h3>Analysis Details:</h3>
-                    <p><strong>Previous Patient:</strong> {{ analysis.content.splitlines()[0].split(': ')[1] }}</p>
-                    <p><strong>Latest Patient:</strong> {{ analysis.content.splitlines()[1].split(': ')[1] }}</p>
+                    <p><strong>Previous Patient:</strong> {{ analysis.previous_patient }}</p>
+                    <p><strong>Latest Patient:</strong> {{ analysis.latest_patient }}</p>
                     <table>
                         <thead>
                             <tr>
@@ -103,7 +103,7 @@
                 </div>
             </div>
         {% endfor %}
-    </div>
+    </div>    
 
     <script>
         function toggleAnalysis(analysisId) {

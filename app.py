@@ -216,13 +216,28 @@ def doctors_forum():
             parts = line.strip().split('|')
             if len(parts) == 6:
                 username, analysis_id, patient_name, analysis_type, timestamp, content = parts
+                content_lines = content.splitlines()
+                # Extract or assign default values
+                previous_patient = (
+                    content_lines[0].split(': ')[-1]
+                    if len(content_lines) > 0 and ': ' in content_lines[0]
+                    else "Unknown"
+                )
+                latest_patient = (
+                    content_lines[1].split(': ')[-1]
+                    if len(content_lines) > 1 and ': ' in content_lines[1]
+                    else "Unknown"
+                )
+
                 analyses.append({
                     'analysis_id': analysis_id,
                     'username': username,
                     'patient_name': patient_name,
                     'analysis_type': analysis_type,
                     'timestamp': timestamp,
-                    'content': content
+                    'content': content,
+                    'previous_patient': previous_patient,
+                    'latest_patient': latest_patient
                 })
 
     return render_template('doctors_forum.html', analyses=analyses)
